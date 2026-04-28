@@ -126,10 +126,25 @@ const Notes: React.FC = () => {
   const handleSave = async (note: Note) => {
     setActionLoading(true);
     try {
+      const formData = new FormData();
+      formData.append("title", note.title);
+      formData.append("description", note.description || "");
+      formData.append("status_id", String(note.status_id));
+      formData.append("priority_id", String(note.priority_id));
+      if (note.due_date) formData.append("due_date", String(note.due_date));
+      formData.append("is_pinned", note.is_pinned ? "1" : "0");
+      if (note.attachment) {
+        formData.append("attachment", note.attachment);
+      }
+      if (note.delete_attachment) {
+        formData.append("delete_attachment", "1");
+      }
+
       if (note.id) {
-        await postUpdateNote(note.id, note);
+        const res: any = await postUpdateNote(note.id, formData);
+        const updatedNote = res;
         setNotes((prev) => {
-          const updated = prev.map((n) => (n.id === note.id ? { ...n, ...note } : n));
+          const updated = prev.map((n) => (n.id === note.id ? updatedNote : n));
           setNoteCounts({
             all: updated.length,
             important: updated.filter((n) => n.is_pinned).length,
@@ -138,8 +153,8 @@ const Notes: React.FC = () => {
         });
         toast.success("Note updated successfully");
       } else {
-        const res: any = await postCreateNote(note);
-        const newNote = res.data;
+        const res: any = await postCreateNote(formData);
+        const newNote = res;
         setNotes((prev) => {
           const updated = [...prev, newNote];
           setNoteCounts({

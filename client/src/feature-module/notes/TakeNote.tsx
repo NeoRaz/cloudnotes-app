@@ -69,6 +69,18 @@ const TakeNote: React.FC = () => {
     }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.type !== "application/pdf") {
+        toast.error("Please upload a PDF file");
+        e.target.value = "";
+        return;
+      }
+      setForm((prev) => ({ ...prev, attachment: file }));
+    }
+  };
+
   const handleSubmit = () => {
     if (!form.title.trim()) {
       setValidated(true);
@@ -76,7 +88,20 @@ const TakeNote: React.FC = () => {
     }
 
     setLoading(true);
-    postCreateNote(form)
+
+    // Use FormData for file upload
+    const formData = new FormData();
+    formData.append("title", form.title);
+    formData.append("description", form.description || "");
+    formData.append("status_id", String(form.status_id));
+    formData.append("priority_id", String(form.priority_id));
+    if (form.due_date) formData.append("due_date", form.due_date);
+    formData.append("is_pinned", form.is_pinned ? "1" : "0");
+    if (form.attachment) {
+      formData.append("attachment", form.attachment);
+    }
+
+    postCreateNote(formData)
       .then(() => {
         toast.success("Note created successfully");
         navigate(route.noteList);
@@ -114,7 +139,7 @@ const TakeNote: React.FC = () => {
             <button
               type="button"
               onClick={handleSubmit}
-              className="btn btn-primary d-flex align-items-center gap-2"
+              className="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
               disabled={loading}
             >
               {loading && (
@@ -124,98 +149,128 @@ const TakeNote: React.FC = () => {
                   aria-hidden="true"
                 ></span>
               )}
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Saving..." : "Save Note"}
             </button>
           </div>
         </div>
 
-        <div className="card mt-3">
+        <div className="card mt-3 shadow-sm border-0">
           <div className="card-body">
-            {/* Title */}
-            <div className="mb-3">
-              <label className="form-label">Title</label>
-              <input
-                name="title"
-                value={form.title}
-                onChange={handleChange}
-                className={`form-control ${
-                  validated && !form.title.trim() ? "is-invalid" : ""
-                }`}
-                placeholder="Enter note title"
-              />
-              {validated && !form.title.trim() && (
-                <div className="invalid-feedback">Title is required.</div>
-              )}
-            </div>
-
-            {/* Description */}
-            <div className="mb-3">
-              <label className="form-label">Description</label>
-              <ReactQuill
-                theme="snow"
-                value={form.description}
-                onChange={(val) => setForm((p) => ({ ...p, description: val }))}
-              />
-            </div>
-
             <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Status</label>
-                <select
-                  name="status_id"
-                  value={form.status_id}
-                  onChange={handleChange}
-                  className="form-select"
-                >
-                  <option value="">-- Select Status --</option>
-                  {statuses?.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.title}
-                    </option>
-                  ))}
-                </select>
+              <div className="col-lg-8">
+                {/* Title */}
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Title</label>
+                  <input
+                    name="title"
+                    value={form.title}
+                    onChange={handleChange}
+                    className={`form-control form-control-lg ${
+                      validated && !form.title.trim() ? "is-invalid" : ""
+                    }`}
+                    placeholder="What's on your mind?"
+                  />
+                  {validated && !form.title.trim() && (
+                    <div className="invalid-feedback">Title is required.</div>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div className="mb-4">
+                  <label className="form-label fw-bold">Content</label>
+                  <ReactQuill
+                    theme="snow"
+                    style={{ height: "250px", marginBottom: "50px" }}
+                    value={form.description}
+                    onChange={(val) => setForm((p) => ({ ...p, description: val }))}
+                  />
+                </div>
               </div>
 
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Priority</label>
-                <select
-                  name="priority_id"
-                  value={form.priority_id}
-                  onChange={handleChange}
-                  className="form-select"
-                >
-                  <option value="">-- Select Priority --</option>
-                  {priorities?.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title}
-                    </option>
-                  ))}
-                </select>
+              <div className="col-lg-4 border-start ps-lg-4">
+                <div className="mb-4">
+                  <label className="form-label fw-bold">Properties</label>
+                  <div className="row g-2">
+                    <div className="col-12 mb-2">
+                      <label className="small text-muted mb-1">Status</label>
+                      <select
+                        name="status_id"
+                        value={form.status_id}
+                        onChange={handleChange}
+                        className="form-select"
+                      >
+                        <option value="">-- Select Status --</option>
+                        {statuses?.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="col-12 mb-2">
+                      <label className="small text-muted mb-1">Priority</label>
+                      <select
+                        name="priority_id"
+                        value={form.priority_id}
+                        onChange={handleChange}
+                        className="form-select"
+                      >
+                        <option value="">-- Select Priority --</option>
+                        {priorities?.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="col-12 mb-2">
+                      <label className="small text-muted mb-1">Due Date</label>
+                      <input
+                        name="due_date"
+                        type="date"
+                        value={form.due_date ?? ""}
+                        onChange={handleChange}
+                        className="form-control"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                   <label className="form-label fw-bold">Attachments</label>
+                   <div className="upload-area p-3 border rounded text-center bg-light">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleFileChange}
+                        className="form-control mb-2"
+                      />
+                      <p className="text-muted mb-0" style={{ fontSize: "0.75rem" }}>
+                        Upload a PDF document to link with this note. AI will automatically index its content!
+                      </p>
+                      {form.attachment && (
+                        <div className="mt-2 badge bg-success-subtle text-success p-2 d-block text-truncate">
+                           <i className="ti ti-file-text me-1" />
+                           {form.attachment.name}
+                        </div>
+                      )}
+                   </div>
+                </div>
+
+                <div className="form-check form-switch mb-3">
+                  <input
+                    name="is_pinned"
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    checked={!!form.is_pinned}
+                    onChange={handleChange}
+                  />
+                  <label className="form-check-label fw-medium">Pin this note</label>
+                </div>
               </div>
-            </div>
-
-            {/* Due Date */}
-            <div className="mb-3">
-              <label className="form-label">Due Date</label>
-              <input
-                name="due_date"
-                type="date"
-                value={form.due_date ?? ""}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
-
-            {/* Pinned */}
-            <div className="form-check mb-3">
-              <input
-                name="is_pinned"
-                className="form-check-input"
-                type="checkbox"
-                checked={!!form.is_pinned}
-                onChange={handleChange}
-              />
-              <label className="form-check-label">Pin note</label>
             </div>
           </div>
         </div>

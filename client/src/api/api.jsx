@@ -214,13 +214,13 @@ export async function getFileRequest(
     responseType = RESPONSE_TYPE.BLOB
 ) {
     try {
-        const response = await axios.get(url, {
+        const response = await api.get(url, {
             params: { ...params },
             responseType,
         });
 
         const blob = new Blob([response.data], {
-            type: 'application/vnd.ms-excel',
+            type: response.headers['content-type'],
         });
         saveAs(blob, filename);
     } catch (error) {

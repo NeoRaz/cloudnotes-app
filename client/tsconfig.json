@@ -19,21 +19,18 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["react", "react-dom", "react-select", "react-router-dom"]
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "react-select",
+      "react-router-dom"
+    ]
   },
   "include": [
     "src"
   ]
 }
-
-
-
-
-
-
-
-
-
 // {
 //   "compilerOptions": {
 //     "target": "es5",

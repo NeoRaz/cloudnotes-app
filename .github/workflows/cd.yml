@@ -65,6 +65,21 @@ jobs:
           DB_CONNECTION=mysql
           DB_PORT=3306
 
+          # PG Vector DB
+          PG_DB_CONNECTION=pgsql
+          PG_HOST=${{ secrets.PG_HOST }}
+          PG_PORT=5432
+          PG_DATABASE=${{ secrets.PG_DATABASE }}
+          PG_USERNAME=${{ secrets.PG_USERNAME }}
+          PG_PASSWORD=${{ secrets.PG_PASSWORD }}
+
+          # AI
+          ENABLE_AI=${{ secrets.ENABLE_AI }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_EMBEDDING_MODEL=${{ secrets.OPENAI_EMBEDDING_MODEL }}
+          LLM_OPENAI_MODEL=${{ secrets.LLM_OPENAI_MODEL }}
+          MODEL_PROVIDER=openai
+
           # Redis
           REDIS_HOST=${{ secrets.REDIS_HOST }}
           REDIS_CLIENT=phpredis
@@ -87,17 +102,36 @@ jobs:
           CACHE_PREFIX=
           QUEUE_CONNECTION=redis
           SESSION_DRIVER=database
+          FILESYSTEM_DISK=s3
+
+          # S3 / MinIO
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_BUCKET=${{ secrets.AWS_BUCKET }}
+          AWS_ENDPOINT=${{ secrets.AWS_ENDPOINT }}
+          AWS_USE_PATH_STYLE_ENDPOINT=${{ secrets.AWS_USE_PATH_STYLE_ENDPOINT }}
+          AWS_URL=${{ secrets.AWS_URL }}
+
           SESSION_LIFETIME=120
           SESSION_ENCRYPT=false
           SESSION_PATH=/
           SESSION_DOMAIN=null
 
           # React client
+          REACT_APP_ENABLE_AI=${{ secrets.REACT_APP_ENABLE_AI }}
           REACT_APP_NODE_ENV=production
           REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }}
           REACT_APP_CLIENT_ID=${{ secrets.REACT_APP_CLIENT_ID }}
           REACT_APP_CLIENT_SECRET=${{ secrets.REACT_APP_CLIENT_SECRET }}
           REACT_APP_SECRET_KEY=Cloud-Notes-Client
+
+          # Logging
+          LOG_CHANNEL=stderr
+
+          # Passport Keys
+          PASSPORT_PRIVATE_KEY="${{ secrets.PASSPORT_PRIVATE_KEY }}"
+          PASSPORT_PUBLIC_KEY="${{ secrets.PASSPORT_PUBLIC_KEY }}"
 
           # Dockerhub creds for prod environment
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
@@ -109,24 +143,6 @@ jobs:
         run: |
           chmod +x ./deployment/scripts/deploy-first-step.sh
           ./deployment/scripts/deploy-first-step.sh $ENVIRONMENT
-
-      - name: 🗃️ Run migrations and seed database
-        run: |
-          ENV_FILE="./deployment/envs/${ENVIRONMENT}.env"
-          source "$ENV_FILE"
-
-          echo "⏳ Waiting for server pod to be ready..."
-          kubectl wait --for=condition=available --timeout=300s -n "$NAMESPACE" deployment/server
-
-          POD_NAME=$(kubectl get pods -n "$NAMESPACE" -l app=server -o jsonpath='{.items[0].metadata.name}')
-          echo "✅ Found server pod: $POD_NAME"
-
-          echo "✅ Running Laravel Artisan commands..."
-          kubectl exec -n "$NAMESPACE" deployment/server -c php-fpm -- php artisan config:clear
-          kubectl exec -n "$NAMESPACE" deployment/server -c php-fpm -- php artisan route:clear
-          kubectl exec -n "$NAMESPACE" deployment/server -c php-fpm -- php artisan migrate --seed --force
-          kubectl exec -n "$NAMESPACE" deployment/server -c php-fpm -- php artisan cache:clear
-          kubectl exec -n "$NAMESPACE" deployment/server -c php-fpm -- php artisan config:cache
 
       - name: 💻 Build and deploy frontend (second step)
         run: |

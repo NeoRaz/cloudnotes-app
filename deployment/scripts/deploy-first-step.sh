@@ -13,7 +13,6 @@ echo "🚀 Starting first step of CloudNotes deployment ($ENVIRONMENT)..."
 # bash $SCRIPT_DIR/01-setup-minikube.sh
 
 bash $SCRIPT_DIR/02-build-server.sh "$ENVIRONMENT"
-bash $SCRIPT_DIR/03-app-key-generation.sh "$ENVIRONMENT"
 
 
 echo "🎉 First step completed successfully!"

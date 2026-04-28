@@ -24,20 +24,25 @@ export const userSidebarData = [
       },
     ],
   },
-  // {
-  //   label: "AI",
-  //   submenuOpen: true,
-  //   submenuHdr: "Sales",
-  //   submenu: false,
-  //   showSubRoute: false,
-  //   submenuItems: [
-  //     {
-  //       label: "Assistant",
-  //       link: routes.assistant,
-  //       icon: "ti ti-wand",
-  //       showSubRoute: false,
-  //       submenu: false,
-  //     },
-  //   ],
-  // },
-];
+  {
+    label: "AI",
+    submenuOpen: true,
+    submenuHdr: "AI",
+    submenu: false,
+    showSubRoute: false,
+    submenuItems: [
+      {
+        label: "Assistant",
+        link: routes.assistant,
+        icon: "ti ti-robot",
+        showSubRoute: false,
+        submenu: false,
+      },
+    ],
+  },
+].filter((item) => {
+  if (item.label === "AI" && process.env.REACT_APP_ENABLE_AI === 'false') {
+    return false;
+  }
+  return true;
+});

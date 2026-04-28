@@ -47,6 +47,9 @@
 /server/.vscode
 /server/.zed
 
+#ai
+/ai/.env
+
 # Docker
 db_data/
 *.pid

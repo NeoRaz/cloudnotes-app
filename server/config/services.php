@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'ai' => [
+        'enabled' => env('ENABLE_AI', true),
+        'base_url' => env('AI_SERVICE_URL', 'http://ai:8000'),
+    ],
+
 ];

@@ -77,4 +77,5 @@ Route::middleware(['auth:api', 'throttle:60,1'])->group(function () {
     require base_path('routes/sub-routes/manage-user.php');
     require base_path('routes/sub-routes/manage-note.php');
     require base_path('routes/sub-routes/manage-utility.php');
+    require base_path('routes/sub-routes/manage-assistant.php');
 });

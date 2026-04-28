@@ -24,6 +24,7 @@ WORKDIR /var/www/html
 RUN apt-get update && apt-get install -y \
     git unzip libpq-dev libzip-dev zip curl netcat-openbsd redis-tools \
     && docker-php-ext-install pdo pdo_mysql \
+    && docker-php-ext-install pdo_pgsql \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
@@ -37,16 +38,9 @@ COPY . .
 # 🧹 Remove cached bootstrap files
 RUN rm -rf bootstrap/cache/*.php
 
-# Add entrypoint script
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 # Fix Laravel permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Use custom entrypoint that clears caches, migrates DB, etc.
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Default command
 CMD ["php-fpm"]

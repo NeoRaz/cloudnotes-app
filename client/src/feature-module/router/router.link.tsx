@@ -40,7 +40,12 @@ export const publicRoutes = [
     path: routes.profile,
     element: <Profile />,
   }
-];
+].filter((route) => {
+  if (route.path === routes.assistant && process.env.REACT_APP_ENABLE_AI === 'false') {
+    return false;
+  }
+  return true;
+});
 
 export const authRoutes = [
   {

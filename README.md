@@ -202,16 +202,13 @@ minikube delete
 # 1) Backend (build images, deploy DB, cache, server)
 ./deployment/scripts/deploy-first-step.sh local
 
-# 2) Optional: run migrations/seeds inside the running server
-kubectl exec -it -n cloudnotes-local deploy/server -- php artisan migrate --seed --force
-
-# 3) Frontend and Passport (generate oauth credentials, build client, apply overlay)
+# 2) Frontend and Passport (generate oauth credentials, build client, apply overlay)
 ./deployment/scripts/deploy-second-step.sh local
 
-# 4) Allow ingress routing
+# 3) Allow ingress routing
 minikube tunnel
 
-# 5) Open the app in your browser (check ingress host):
+# 4) Open the app in your browser (check ingress host):
 #    http://cloudnotes.127.0.0.1.nip.io OR http://cloudnotes.local (if /etc/hosts configured)
 ```
 

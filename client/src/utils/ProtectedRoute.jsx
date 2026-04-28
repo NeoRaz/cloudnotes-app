@@ -37,14 +37,15 @@ export function ProtectedRoute({ children }) {
     }, [location, cached]);
     
 
-    useEffect(() => {
-        const tokenType = sessionStorage.getItem('token_type');
-        const accessToken = sessionStorage.getItem('access_token');
+    const tokenType = sessionStorage.getItem('token_type');
+    const accessToken = sessionStorage.getItem('access_token');
+    const isAuthenticated = (tokenType !== null && tokenType !== 'undefined' && accessToken !== null && accessToken !== 'undefined');
 
-        if (tokenType === null || tokenType === 'undefined' || accessToken === null || accessToken === 'undefined') {
+    useEffect(() => {
+        if (!isAuthenticated) {
             navigate(auth_routes.login);
         }
-    }, [navigate]);
+    }, [navigate, isAuthenticated]);
 
     const EXPIRATION_DURATION = 50 * 60 * 1000;
 
@@ -71,6 +72,10 @@ export function ProtectedRoute({ children }) {
 
         return () => clearTimeout(timer);
     }, [key]);
+
+    if (!isAuthenticated) {
+        return null; // Or a loading spinner
+    }
 
     return (
         <div className="theme-light">
