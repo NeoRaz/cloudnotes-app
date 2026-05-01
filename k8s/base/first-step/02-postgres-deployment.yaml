@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: postgres
-          image: pgvector/pgvector:pg15
+          image: ankane/pgvector:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_USER

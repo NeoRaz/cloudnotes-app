@@ -4,7 +4,10 @@ from pydantic import BaseModel
 
 
 class EmbedRequest(BaseModel):
-    input: Union[str, List[str]]
+    input: Optional[Union[str, List[str]]] = None
+    prompt: Optional[Union[str, List[str]]] = None
+    model: Optional[str] = None
+    options: Optional[dict] = None
     batch_size: Optional[int] = 32
 
 
@@ -52,6 +55,8 @@ class AskRequest(BaseModel):
     history: Optional[List[HistoryMessage]] = None
     # Optional: aggregate stats injected by Laravel (e.g. total note count)
     meta: Optional[dict] = None
+    # Optional: externally provided context (e.g. from Graph RAG)
+    context: Optional[str] = None
 
 
 class AskResponse(BaseModel):

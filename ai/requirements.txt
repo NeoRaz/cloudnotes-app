@@ -6,3 +6,5 @@ numpy
 openai
 pydantic
 python-dotenv
+python-multipart
+pypdf

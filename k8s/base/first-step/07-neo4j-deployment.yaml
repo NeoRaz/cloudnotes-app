@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neo4j
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neo4j
+  template:
+    metadata:
+      labels:
+        app: neo4j
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: neo4j
+          image: neo4j:5
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GRAPH_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloudnotes-env
+                  key: GRAPH_DATABASE_PASSWORD
+                  optional: true
+            - name: NEO4J_AUTH
+              value: "neo4j/$(GRAPH_DB_PASSWORD)"
+            - name: NEO4J_PLUGINS
+              value: '["apoc"]'
+            - name: NEO4J_apoc_export_file_enabled
+              value: "true"
+            - name: NEO4J_apoc_import_file_enabled
+              value: "true"
+            - name: NEO4J_apoc_import_file_use__neo4j__config
+              value: "true"
+            - name: NEO4J_dbms_memory_heap_initial__size
+              value: "512m"
+            - name: NEO4J_dbms_memory_heap_max__size
+              value: "1G"
+            - name: NEO4J_dbms_memory_pagecache_size
+              value: "512m"
+          ports:
+            - containerPort: 7474
+              name: http
+            - containerPort: 7687
+              name: bolt
+          volumeMounts:
+            - name: neo4j-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+      volumes:
+        - name: neo4j-data
+          persistentVolumeClaim:
+            claimName: neo4j-pvc

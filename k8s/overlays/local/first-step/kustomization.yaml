@@ -4,9 +4,12 @@ namespace: cloudnotes-local
 images:
 - name: cloudnotes-ai
   newName: cloudnotes-ai
-  newTag: local-1777410782
+  newTag: local-1777586118
+- name: cloudnotes-cognee
+  newName: cloudnotes-cognee
+  newTag: local-1777586118
 - name: cloudnotes-server
   newName: cloudnotes-server
-  newTag: local-1777410782
+  newTag: local-1777586118
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

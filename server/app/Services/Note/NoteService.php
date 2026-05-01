@@ -72,9 +72,20 @@ class NoteService
     public function delete(int $id)
     {
         $note = $this->repo->find($id);
+        
+        // 1. Notify AI services to prune data
+        try {
+            app(\App\Services\AI\AiService::class)->deleteNoteData($id, $note->user_id);
+        } catch (\Exception $e) {
+            \Log::error("Pruning AI data failed during note deletion: " . $e->getMessage());
+        }
+
+        // 2. Delete physical attachment
         if ($note->attachment_path) {
             $this->storage->delete($note->attachment_path);
         }
+
+        // 3. Delete metadata
         return $this->repo->delete($note);
     }
 }

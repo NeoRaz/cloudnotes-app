@@ -6,6 +6,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SERVER_DIR="$PROJECT_ROOT/server"
 ENV_FILE="$PROJECT_ROOT/deployment/envs/${ENVIRONMENT}.env"
 AI_DIR="$PROJECT_ROOT/ai"
+COGNEE_DIR="$PROJECT_ROOT/cognee"
 
 FIRST_STEP_OVERLAY_PATH="$PROJECT_ROOT/k8s/overlays/${ENVIRONMENT}/first-step"
 SECOND_STEP_OVERLAY_PATH="$PROJECT_ROOT/k8s/overlays/${ENVIRONMENT}/second-step"
@@ -47,6 +48,9 @@ if [ "$ENVIRONMENT" == "local" ]; then
   echo "🛠️ Building local Docker image: cloudnotes-ai:$IMAGE_TAG"
   docker build -t cloudnotes-ai:$IMAGE_TAG "$AI_DIR"
 
+  echo "🛠️ Building local Docker image: cloudnotes-cognee:$IMAGE_TAG"
+  docker build -t cloudnotes-cognee:$IMAGE_TAG "$COGNEE_DIR"
+
   echo "🧩 Patching Kustomize overlay (first-step) with new server image..."
   (cd "$FIRST_STEP_OVERLAY_PATH" && kustomize edit set image cloudnotes-server=cloudnotes-server:$IMAGE_TAG)
   
@@ -58,6 +62,9 @@ if [ "$ENVIRONMENT" == "local" ]; then
 
   echo "🧩 Patching Kustomize overlay (second-step) with new AI image..."
   (cd "$SECOND_STEP_OVERLAY_PATH" && kustomize edit set image cloudnotes-ai=cloudnotes-ai:$IMAGE_TAG)
+
+  echo "🧩 Patching Kustomize overlay (first-step) with new Cognee image..."
+  (cd "$FIRST_STEP_OVERLAY_PATH" && kustomize edit set image cloudnotes-cognee=cloudnotes-cognee:$IMAGE_TAG)
 
 else
   echo "☁️ Building and pushing Docker Hub image for production..."
@@ -76,6 +83,9 @@ else
 
   echo "🛠️ Building AI Docker image: cloudnotes-ai:$IMAGE_TAG"
   docker build -t cloudnotes-ai:$IMAGE_TAG "$AI_DIR"
+
+  echo "🛠️ Building Cognee Docker image: cloudnotes-cognee:$IMAGE_TAG"
+  docker build -t cloudnotes-cognee:$IMAGE_TAG "$COGNEE_DIR"
 
   # Ensure Docker credentials exist
   if [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_PASSWORD" ] || [ -z "$DOCKER_EMAIL" ]; then
@@ -102,6 +112,12 @@ else
   docker push "$DOCKER_USERNAME/cloudnotes-ai:$IMAGE_TAG"
   docker push "$DOCKER_USERNAME/cloudnotes-ai:latest"
 
+  echo "📤 Tagging and pushing Cognee image to Docker Hub..."
+  docker tag cloudnotes-cognee:$IMAGE_TAG "$DOCKER_USERNAME/cloudnotes-cognee:$IMAGE_TAG"
+  docker tag cloudnotes-cognee:$IMAGE_TAG "$DOCKER_USERNAME/cloudnotes-cognee:latest"
+  docker push "$DOCKER_USERNAME/cloudnotes-cognee:$IMAGE_TAG"
+  docker push "$DOCKER_USERNAME/cloudnotes-cognee:latest"
+
 
   echo "🧩 Patching Kustomize overlay (first-step) with new server image..."
   (cd "$FIRST_STEP_OVERLAY_PATH" && \
@@ -118,6 +134,10 @@ else
   echo "🧩 Patching Kustomize overlay (second-step) with new AI image..."
   (cd "$SECOND_STEP_OVERLAY_PATH" && \
     kustomize edit set image cloudnotes-ai="$DOCKER_USERNAME/cloudnotes-ai:$IMAGE_TAG")
+
+  echo "🧩 Patching Kustomize overlay (first-step) with new Cognee image..."
+  (cd "$FIRST_STEP_OVERLAY_PATH" && \
+    kustomize edit set image cloudnotes-cognee="$DOCKER_USERNAME/cloudnotes-cognee:$IMAGE_TAG")
 fi
 
 
@@ -197,17 +217,18 @@ kubectl -n "$NAMESPACE" create secret generic cloudnotes-env \
   --from-literal=MAIL_FROM_NAME="$MAIL_FROM_NAME" \
   \
   --from-literal=BREVO_API_KEY="$BREVO_API_KEY" \
-  --from-literal=OPENAI_API_KEY="$OPENAI_API_KEY" \
+  --from-literal=AI_MODEL_PROVIDER="$AI_MODEL_PROVIDER" \
+  --from-literal=AI_ENDPOINT_URL="$AI_ENDPOINT_URL" \
+  --from-literal=COGNEE_EMBEDDING_ENDPOINT="$COGNEE_EMBEDDING_ENDPOINT" \
+  --from-literal=AI_API_KEY="$AI_API_KEY" \
+  --from-literal=AI_LLM_MODEL="$AI_LLM_MODEL" \
+  --from-literal=AI_EMBEDDING_MODEL="$AI_EMBEDDING_MODEL" \
+  --from-literal=AI_EMBEDDING_DIM="$AI_EMBEDDING_DIM" \
+  --from-literal=HUGGINGFACE_TOKENIZER="$HUGGINGFACE_TOKENIZER" \
   \
-  --from-literal=OPENAI_EMBEDDING_MODEL="$OPENAI_EMBEDDING_MODEL" \
-  --from-literal=LLM_OPENAI_MODEL="$LLM_OPENAI_MODEL" \
-  \
-  --from-literal=OLLAMA_API_BASE="$OLLAMA_API_BASE" \
-  --from-literal=OLLAMA_EMBEDDING_MODEL="$OLLAMA_EMBEDDING_MODEL" \
-  --from-literal=OLLAMA_LLM_MODEL="$OLLAMA_LLM_MODEL" \
-  \
-  --from-literal=MODEL_PROVIDER="$MODEL_PROVIDER" \
   --from-literal=ENABLE_AI="$ENABLE_AI" \
+  --from-literal=COGNEE_SERVICE_URL="$COGNEE_SERVICE_URL" \
+  --from-literal=GRAPH_DATABASE_PASSWORD="$GRAPH_DATABASE_PASSWORD" \
   \
   --from-literal=LOG_CHANNEL="$LOG_CHANNEL" \
   --from-literal=PASSPORT_PRIVATE_KEY="$PASSPORT_PRIVATE_KEY" \
@@ -222,9 +243,9 @@ kubectl wait --for=condition=ready pod -l app=postgres -n "$NAMESPACE" --timeout
 kubectl wait --for=condition=ready pod -l app=redis -n "$NAMESPACE" --timeout=300s || exit 1
 
 echo "⏳ Waiting for server pod to be ready..."
-kubectl wait --for=condition=available --timeout=300s -n "$NAMESPACE" deployment/server
+kubectl rollout status deployment/server -n "$NAMESPACE" --timeout=300s
 
-POD_NAME=$(kubectl get pods -n "$NAMESPACE" -l app=server -o jsonpath='{.items[0].metadata.name}')
+POD_NAME=$(kubectl get pods -n "$NAMESPACE" -l app=server --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}')
 echo "✅ Found server pod: $POD_NAME"
 
 echo "✅ Running Laravel Artisan commands..."

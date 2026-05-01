@@ -1,5 +1,6 @@
 # ai/app/utils.py
 import os
+import re
 import json
 import logging
 import requests
@@ -7,117 +8,98 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 # ---------------------------------------------------------------------------
-# Config from environment
+# Simple Configuration
 # ---------------------------------------------------------------------------
-MODEL_PROVIDER          = os.environ.get("MODEL_PROVIDER", "ollama")
-OLLAMA_API_BASE         = os.environ.get("OLLAMA_API_BASE", "http://host.minikube.internal:11434")
-OLLAMA_EMBEDDING_MODEL  = os.environ.get("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
-OLLAMA_LLM_MODEL        = os.environ.get("OLLAMA_LLM_MODEL", "gemma3:1b")
-
-OPENAI_API_KEY          = os.environ.get("OPENAI_API_KEY")
-OPENAI_EMBEDDING_MODEL  = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-LLM_OPENAI_MODEL        = os.environ.get("LLM_OPENAI_MODEL", "gpt-4o-mini")
-
-DB_HOST     = os.environ.get("PG_HOST", "postgres")
-DB_PORT     = int(os.environ.get("PG_PORT", 5432))
-DB_NAME     = os.environ.get("PG_DATABASE", "cloudnotes_vector")
-DB_USER     = os.environ.get("PG_USERNAME", "cloudnotes")
-DB_PASS     = os.environ.get("PG_PASSWORD", "cloudnotes_pass")
-DB_CONN_STR = os.environ.get("DB_CONN_STR")
-
-try:
-    import openai
-except Exception:
-    openai = None
+MODEL_PROVIDER      = os.environ.get("AI_MODEL_PROVIDER", "ollama")
+OLLAMA_HOST         = os.environ.get("AI_ENDPOINT_URL", "http://host.minikube.internal:11434").replace("/v1", "")
+LLM_MODEL       = os.environ.get("AI_LLM_MODEL", "qwen2.5-coder:7b")
+EMBED_MODEL     = os.environ.get("AI_EMBEDDING_MODEL", "nomic-embed-text")
 
 # ---------------------------------------------------------------------------
-# Ollama helpers
+# 1. The Brain: LLM (Text Generation)
 # ---------------------------------------------------------------------------
-
-def call_ollama_embedding(inputs: list[str]) -> list[list[float]]:
-    """
-    Calls the Ollama /api/embed endpoint with batch inputs.
-    Returns a list of embedding vectors.
-    """
-    url = f"{OLLAMA_API_BASE}/api/embed"
-    resp = requests.post(
-        url,
-        json={"model": OLLAMA_EMBEDDING_MODEL, "input": inputs},
-        timeout=120,
-    )
-    resp.raise_for_status()
-    body = resp.json()
-    # Ollama returns {"embeddings": [[vec1], [vec2], ...], ...}
-    return body["embeddings"]
-
-
 def call_ollama_llm(req) -> tuple[str, str]:
     """
-    Calls the Ollama /api/generate endpoint (non-streaming).
-    Returns (generated_text, model_name).
+    Forwards prompt to Ollama, adds extraction instructions, and cleans the response.
     """
-    model = req.model or OLLAMA_LLM_MODEL
-    url   = f"{OLLAMA_API_BASE}/api/generate"
-    resp  = requests.post(
-        url,
-        json={
-            "model":  model,
-            "prompt": req.prompt,
-            "stream": False,
-            "options": {
-                "temperature": req.temperature,
-                "num_predict": req.max_tokens,
-            },
-        },
-        timeout=300,
-    )
+    # Extract the actual prompt
+    messages = getattr(req, "messages", [])
+    prompt = messages[-1]["content"] if messages else getattr(req, "prompt", "")
+    
+    # 1. Extraction Booster: Ensure the AI knows to speak JSON for Cognee
+    # We trigger on extraction AND summarization requests
+    booster_keywords = ["nodes", "edges", "extract", "summarize", "summary", "content"]
+    is_data_request = any(word in prompt.lower() for word in booster_keywords)
+    
+    if is_data_request:
+        prompt = (
+            "### ROLE: YOU ARE A HIGH-PRECISION DATA EXTRACTION ENGINE FOR COGNEE. "
+            "### INSTRUCTION: YOU MUST FOLLOW THE REQUESTED JSON SCHEMA EXACTLY. "
+            "FILL ALL REQUIRED FIELDS (e.g., 'summary', 'description', 'nodes', 'edges'). "
+            "OUTPUT ONLY THE RAW JSON OBJECT. NO PREAMBLE. NO CONVERSATION. NO EXPLANATION. "
+            "ENSURE ALL SPECIAL CHARACTERS ARE PROPERLY JSON-ESCAPED.\n\n"
+        ) + prompt
+
+    # 2. The Call
+    url = f"{OLLAMA_HOST}/api/generate"
+    payload = {
+        "model": getattr(req, "model", LLM_MODEL),
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": getattr(req, "temperature", 0.0),
+            "num_predict": getattr(req, "max_tokens", 4096)
+        }
+    }
+
+    # Only force JSON format for data extraction/summarization
+    if is_data_request:
+        payload["format"] = "json"
+    
+    resp = requests.post(url, json=payload, timeout=300)
     resp.raise_for_status()
-    body = resp.json()
-    return body.get("response", "").strip(), model
+    content = resp.json().get("response", "")
 
+    # 3. The Clean: Strip thought blocks and extract only the JSON part
+    clean = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+    if "{" in clean and "}" in clean:
+        start, end = clean.find("{"), clean.rfind("}") + 1
+        clean = clean[start:end]
 
-# ---------------------------------------------------------------------------
-# OpenAI helpers (kept for reference / easy switch-back)
-# ---------------------------------------------------------------------------
-
-def call_openai_embedding(inputs: list[str]) -> list[list[float]]:
-    if openai is None:
-        raise RuntimeError("openai package not installed")
-    if not OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY missing")
-    openai.api_key = OPENAI_API_KEY
-    resp = openai.Embedding.create(input=inputs, model=OPENAI_EMBEDDING_MODEL)
-    return [d["embedding"] for d in resp["data"]]
-
-
-def call_openai_llm(req) -> tuple[str, str]:
-    if openai is None:
-        raise RuntimeError("openai package not installed")
-    if not OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY missing")
-    openai.api_key = OPENAI_API_KEY
-    model = req.model or LLM_OPENAI_MODEL
-    resp  = openai.ChatCompletion.create(
-        model=model,
-        messages=[{"role": "user", "content": req.prompt}],
-        max_tokens=req.max_tokens,
-        temperature=req.temperature,
-    )
-    return resp["choices"][0]["message"]["content"].strip(), model
-
+    return clean, LLM_MODEL
 
 # ---------------------------------------------------------------------------
-# DB helper
+# 2. The Sense: Embeddings (Vector Math)
 # ---------------------------------------------------------------------------
+def call_ollama_embedding(inputs: list[str]) -> list[list[float]]:
+    """
+    Processes embeddings one-by-one to prevent Ollama from crashing.
+    """
+    embeddings = []
+    url = f"{OLLAMA_HOST}/api/embed"
+    
+    for text in inputs:
+        payload = {"model": EMBED_MODEL, "input": str(text)[:20000]}
+        resp = requests.post(url, json=payload, timeout=60)
+        resp.raise_for_status()
+        
+        body = resp.json()
+        embeddings.append(body.get("embedding") or body.get("embeddings", [[]])[0])
+
+    return embeddings
+
+# ---------------------------------------------------------------------------
+# 3. Helpers (OpenAI Compatibility & DB)
+# ---------------------------------------------------------------------------
+def call_openai_embedding(inputs): return call_ollama_embedding(inputs)
+def call_openai_llm(req): return call_ollama_llm(req)
 
 def get_db_conn():
-    if DB_CONN_STR:
-        return psycopg2.connect(DB_CONN_STR, cursor_factory=RealDictCursor)
     return psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
+        host=os.environ.get("PG_HOST", "postgres"),
+        port=int(os.environ.get("PG_PORT", 5432)),
+        dbname=os.environ.get("PG_DATABASE", "cloudnotes_vector"),
+        user=os.environ.get("PG_USERNAME", "cloudnotes"),
+        password=os.environ.get("PG_PASSWORD", "cloudnotes_pass"),
         cursor_factory=RealDictCursor,
     )
