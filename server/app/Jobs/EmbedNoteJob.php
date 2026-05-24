@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Note;
+use App\Models\NoteVector;
+use App\Services\AI\AiService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,7 +23,7 @@ class EmbedNoteJob implements ShouldQueue
     {
     }
 
-    public function handle(): void
+    public function handle(AiService $ai): void
     {
         $note = $this->note;
 
@@ -64,33 +66,82 @@ class EmbedNoteJob implements ShouldQueue
             return;
         }
 
-        $cogneeUrl = config('services.ai.cognee_url');
+        // Chunk text into segments of ~500 chars (simple word-boundary split)
+        $chunks = $this->chunkText($text, 500);
 
-        if (!$cogneeUrl) {
-            Log::error("EmbedNoteJob: Cognee URL not configured.");
-            $this->fail(new \Exception("Cognee URL missing"));
-            return;
-        }
+        // Delete previous embeddings for this note
+        \DB::connection('pgvector')->table('note_vectors')
+            ->where('note_id', $note->id)
+            ->delete();
 
-        Log::info("EmbedNoteJob: sending note #{$note->id} to Cognee ($contentLength chars)");
-
-        // Send to Cognee API to handle chunking, Graph generation, and Embeddings
+        // Get embeddings for all chunks in one API call
         try {
-            $response = \Illuminate\Support\Facades\Http::timeout(600)->post("{$cogneeUrl}/api/v1/cognify", [
-                'user_id' => $note->user_id,
-                'note_id' => $note->id,
-                'text'    => $text,
-            ]);
-
-            if ($response->failed()) {
-                throw new \Exception("Cognee API failed: " . $response->body());
-            }
-
-            Log::info("EmbedNoteJob: successfully cognified note #{$note->id}");
+            $embeddings = $ai->embed($chunks);
         } catch (\Throwable $e) {
-            Log::error("EmbedNoteJob: cognify failed for note #{$note->id}", ['error' => $e->getMessage()]);
+            Log::error("EmbedNoteJob: embedding failed for note #{$note->id}", ['error' => $e->getMessage()]);
             $this->fail($e);
             return;
         }
+
+        // Persist each chunk + embedding
+        foreach ($chunks as $index => $chunk) {
+            NoteVector::createVector(
+                noteId:     $note->id,
+                chunkIndex: $index,
+                chunkText:  $chunk,
+                embedding:  $embeddings[$index],
+                metadata:   [
+                    'title'   => $note->title,
+                    'user_id' => $note->user_id,
+                ],
+            );
+        }
+
+        Log::info("EmbedNoteJob: embedded note #{$note->id} into " . count($chunks) . " chunk(s)");
+    }
+
+    /**
+     * Split text into overlapping chunks using a sliding window.
+     * This preserves context between chunks.
+     */
+    private function chunkText(string $text, int $maxLen, int $overlap = 100): array
+    {
+        if (mb_strlen($text) <= $maxLen) {
+            return [$text];
+        }
+
+        $chunks = [];
+        $start = 0;
+        $textLen = mb_strlen($text);
+
+        while ($start < $textLen) {
+            $end = $start + $maxLen;
+            
+            // If not at the end of the text, try to find the last space within the window to avoid cutting words
+            if ($end < $textLen) {
+                $lastSpace = mb_strrpos(mb_substr($text, $start, $maxLen), ' ');
+                if ($lastSpace !== false && $lastSpace > ($maxLen * 0.5)) {
+                    $end = $start + $lastSpace;
+                }
+            }
+
+            $chunk = mb_substr($text, $start, $end - $start);
+            $chunks[] = trim($chunk);
+
+            // Move start forward by (window size - overlap)
+            $start = $end - $overlap;
+            
+            // Safety: if we didn't move forward, force move to avoid infinite loop
+            if ($start <= ($end - $maxLen)) {
+                $start = $end;
+            }
+            
+            // If the remaining text is very short, just append it to the last chunk or exit
+            if ($textLen - $start < ($maxLen * 0.2)) {
+                break;
+            }
+        }
+
+        return $chunks;
     }
 }

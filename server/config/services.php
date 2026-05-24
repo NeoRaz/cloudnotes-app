@@ -38,7 +38,7 @@ return [
     'ai' => [
         'enabled' => env('ENABLE_AI', true),
         'url' => env('AI_SERVICE_URL', 'http://ai:8000'),
-        'cognee_url' => env('COGNEE_SERVICE_URL', 'http://cognee:8000'),
+        'base_url' => env('AI_SERVICE_URL', 'http://ai:8000'),
     ],
 
 ];

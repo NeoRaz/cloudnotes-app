@@ -33,7 +33,9 @@ class NoteObserver
      */
     public function deleted(Note $note): void
     {
-        // Knowledge graph pruning is handled by the AiService->deleteNoteData call in NoteService
-        // (Red Flag #5: Centralizing knowledge management in Cognee)
+        \DB::connection('pgvector')->table('note_vectors')
+            ->where('note_id', $note->id)
+            ->delete();
     }
+
 }

@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-pydantic
-python-multipart
-httpx
-cognee[postgres,neo4j,baml]
-transformers

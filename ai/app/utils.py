@@ -12,7 +12,7 @@ from psycopg2.extras import RealDictCursor
 # ---------------------------------------------------------------------------
 MODEL_PROVIDER      = os.environ.get("AI_MODEL_PROVIDER", "ollama")
 OLLAMA_HOST         = os.environ.get("AI_ENDPOINT_URL", "http://host.minikube.internal:11434").replace("/v1", "")
-LLM_MODEL       = os.environ.get("AI_LLM_MODEL", "qwen2.5-coder:7b")
+LLM_MODEL       = os.environ.get("AI_LLM_MODEL", "llama3.2:latest")
 EMBED_MODEL     = os.environ.get("AI_EMBEDDING_MODEL", "nomic-embed-text")
 
 # ---------------------------------------------------------------------------
@@ -20,30 +20,16 @@ EMBED_MODEL     = os.environ.get("AI_EMBEDDING_MODEL", "nomic-embed-text")
 # ---------------------------------------------------------------------------
 def call_ollama_llm(req) -> tuple[str, str]:
     """
-    Forwards prompt to Ollama, adds extraction instructions, and cleans the response.
+    Forwards prompt to Ollama and cleans the response.
     """
     # Extract the actual prompt
     messages = getattr(req, "messages", [])
     prompt = messages[-1]["content"] if messages else getattr(req, "prompt", "")
     
-    # 1. Extraction Booster: Ensure the AI knows to speak JSON for Cognee
-    # We trigger on extraction AND summarization requests
-    booster_keywords = ["nodes", "edges", "extract", "summarize", "summary", "content"]
-    is_data_request = any(word in prompt.lower() for word in booster_keywords)
-    
-    if is_data_request:
-        prompt = (
-            "### ROLE: YOU ARE A HIGH-PRECISION DATA EXTRACTION ENGINE FOR COGNEE. "
-            "### INSTRUCTION: YOU MUST FOLLOW THE REQUESTED JSON SCHEMA EXACTLY. "
-            "FILL ALL REQUIRED FIELDS (e.g., 'summary', 'description', 'nodes', 'edges'). "
-            "OUTPUT ONLY THE RAW JSON OBJECT. NO PREAMBLE. NO CONVERSATION. NO EXPLANATION. "
-            "ENSURE ALL SPECIAL CHARACTERS ARE PROPERLY JSON-ESCAPED.\n\n"
-        ) + prompt
-
-    # 2. The Call
+    # The Call
     url = f"{OLLAMA_HOST}/api/generate"
     payload = {
-        "model": getattr(req, "model", LLM_MODEL),
+        "model": getattr(req, "model", None) or LLM_MODEL,
         "prompt": prompt,
         "stream": False,
         "options": {
@@ -51,21 +37,14 @@ def call_ollama_llm(req) -> tuple[str, str]:
             "num_predict": getattr(req, "max_tokens", 4096)
         }
     }
-
-    # Only force JSON format for data extraction/summarization
-    if is_data_request:
-        payload["format"] = "json"
     
+    logging.info(f"Ollama payload: {payload}")
     resp = requests.post(url, json=payload, timeout=300)
     resp.raise_for_status()
     content = resp.json().get("response", "")
 
-    # 3. The Clean: Strip thought blocks and extract only the JSON part
+    # Strip thought blocks
     clean = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
-    if "{" in clean and "}" in clean:
-        start, end = clean.find("{"), clean.rfind("}") + 1
-        clean = clean[start:end]
-
     return clean, LLM_MODEL
 
 # ---------------------------------------------------------------------------

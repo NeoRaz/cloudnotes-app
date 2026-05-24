@@ -32,6 +32,8 @@ class GenerateResponse(BaseModel):
 class RetrieveRequest(BaseModel):
     embedding: List[float]
     limit: Optional[int] = 5
+    user_id: Optional[int] = None
+
 
 
 class HistoryMessage(BaseModel):

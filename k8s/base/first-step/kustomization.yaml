@@ -24,9 +24,3 @@ resources:
 
   - 06-ai-deployment.yaml
   - 06-ai-service.yaml
-  - 07-neo4j-pvc.yaml
-  - 07-neo4j-deployment.yaml
-  - 07-neo4j-service.yaml
-  - 08-cognee-pvc.yaml
-  - 08-cognee-deployment.yaml
-  - 08-cognee-service.yaml

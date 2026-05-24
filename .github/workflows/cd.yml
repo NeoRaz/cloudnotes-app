@@ -72,14 +72,12 @@ jobs:
           PG_DATABASE=${{ secrets.PG_DATABASE }}
           PG_USERNAME=${{ secrets.PG_USERNAME }}
           PG_PASSWORD=${{ secrets.PG_PASSWORD }}
-          GRAPH_DATABASE_PASSWORD=${{ secrets.GRAPH_DATABASE_PASSWORD }}
 
           # AI Service Configuration
           ENABLE_AI=${{ secrets.ENABLE_AI }}
-          COGNEE_SERVICE_URL=${{ secrets.COGNEE_SERVICE_URL }}
+          AI_SERVICE_URL=${{ secrets.AI_SERVICE_URL }}
           AI_MODEL_PROVIDER=${{ secrets.AI_MODEL_PROVIDER }}
           AI_ENDPOINT_URL=${{ secrets.AI_ENDPOINT_URL }}
-          COGNEE_EMBEDDING_ENDPOINT=${{ secrets.COGNEE_EMBEDDING_ENDPOINT }}
           AI_API_KEY=${{ secrets.AI_API_KEY }}
           AI_LLM_MODEL=${{ secrets.AI_LLM_MODEL }}
           AI_EMBEDDING_MODEL=${{ secrets.AI_EMBEDDING_MODEL }}

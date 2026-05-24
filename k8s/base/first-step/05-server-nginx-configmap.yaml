@@ -6,6 +6,7 @@ data:
   default.conf: |
     server {
       listen 80;
+      client_max_body_size 100M;
       index index.php index.html;
       root /var/www/html/public;
       location / {
