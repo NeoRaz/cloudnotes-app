@@ -181,7 +181,7 @@ const Header = () => {
             data-bs-toggle="dropdown"
             aria-expanded="false"
           >
-            <i className="fa fa-ellipsis-v" />
+            <i className="ti ti-dots-vertical" />
           </Link>
           <div className="dropdown-menu dropdown-menu-end">
             <Link className="dropdown-item" to={routes.profile}>

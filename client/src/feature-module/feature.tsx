@@ -2,7 +2,6 @@ import { useSelector } from "react-redux";
 import { Outlet, useLocation } from "react-router";
 import Header from "../core/common/header";
 import Sidebar from "../core/common/sidebar";
-import ThemeSettings from "../core/common/theme-settings";
 import Loader from "../core/common/loader";
 import { useEffect, useState } from "react";
 import { all_routes } from "./router/all_routes";
@@ -122,7 +121,6 @@ const Feature = () => {
             <Header />
             <Sidebar />
             <Outlet />
-            {!location.pathname.includes("layout") && <ThemeSettings />}
           </div>
         </>
       ) : (
@@ -134,7 +132,6 @@ const Feature = () => {
             <Header />
             <Sidebar />
             <Outlet />
-            {!location.pathname.includes("layout") && <ThemeSettings />}
           </div>
         </>
       )}

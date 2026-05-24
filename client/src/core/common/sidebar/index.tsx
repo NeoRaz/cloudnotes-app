@@ -43,20 +43,20 @@ const Sidebar: React.FC = () => {
                               ? handleMenuClick(item.label)
                               : undefined
                           }
-                          className={`flex items-center ${
+                          className={`d-flex align-items-center ${
                             openMenu === item.label ? "subdrop" : ""
                           }`}
                         >
                           {item.icon && <i className={item.icon}></i>}
-                          <span className="ml-2">{item.label}</span>
+                          <span className="ms-2">{item.label}</span>
                           {item.submenu && (
-                            <span className="menu-arrow ml-auto"></span>
+                            <span className="menu-arrow ms-auto"></span>
                           )}
                         </Link>
 
                         {/* Submenu items */}
                         {item.submenu && item.submenuItems && openMenu === item.label && (
-                          <ul className="ml-6">
+                          <ul className="ms-4">
                             {item.submenuItems.map((sub: SidebarItem) => (
                               <li
                                 key={sub.label}

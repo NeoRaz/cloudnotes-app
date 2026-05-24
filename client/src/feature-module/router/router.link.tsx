@@ -1,4 +1,4 @@
-import { Navigate, Route } from "react-router";
+import { Route } from "react-router";
 import { all_routes, auth_routes } from "./all_routes";
 
 import ComingSoon from "../pages/comingSoon";

@@ -26,7 +26,7 @@ const NotesSidebar: React.FC<Props> = ({
 }) => {
   return (
     <div className="stickybar">
-      <div className="border rounded-3 mt-4 bg-white p-3">
+      <div className="card no-hover mt-4 p-3">
         <div className="mb-3 pb-3 border-bottom">
           <h4 className="d-flex align-items-center">
             <i className="ti ti-file-text me-2" /> List
@@ -83,7 +83,7 @@ const NotesSidebar: React.FC<Props> = ({
                     })
                   }
                 >
-                  <i className="fas fa-square square-rotate fs-10 me-2" />{" "}
+                  <i className="ti ti-square-filled me-2" />{" "}
                   {t.title}
                 </button>
               ))}
@@ -109,7 +109,7 @@ const NotesSidebar: React.FC<Props> = ({
                     })
                   }
                 >
-                  <i className="fas fa-square square-rotate fs-10 me-2" />{" "}
+                  <i className="ti ti-square-filled me-2" />{" "}
                   {p.title}
                 </button>
               ))}

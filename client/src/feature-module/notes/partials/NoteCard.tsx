@@ -4,10 +4,6 @@ import { Modal } from "react-bootstrap";
 import DOMPurify from "dompurify";
 import { Selection } from "../../../types/selection";
 import { getFileRequest } from "../../../api/api";
-
-// CRA injects REACT_APP_* via webpack DefinePlugin; declare process so TS is happy
-declare const process: { env: Record<string, string | undefined> };
-
 interface Props {
   note: Note;
   onEdit: (note: Note) => void;
@@ -16,17 +12,17 @@ interface Props {
   mapPriority: Record<Selection["id"], string>;
 }
 
-const NoteCard: React.FC<Props> = ({ note, onEdit, onDelete, mapStatus, mapPriority}) => {
+const NoteCard: React.FC<Props> = ({ note, onEdit, onDelete, mapStatus, mapPriority }) => {
   const [showModal, setShowModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   const getStatusName = (id?: number) => (id ? mapStatus[id] ?? "" : "");
-  const getPriorityName = (id?: number) => (id ? mapPriority[id] ?? "" : ""); 
+  const getPriorityName = (id?: number) => (id ? mapPriority[id] ?? "" : "");
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!note.id) return;
-    
+
     setDownloading(true);
     try {
       await getFileRequest(
@@ -132,16 +128,16 @@ const NoteCard: React.FC<Props> = ({ note, onEdit, onDelete, mapStatus, mapPrior
 
           {note.attachment_path && (
             <div className="mt-4 p-3 bg-light rounded border">
-               <h6 className="fw-bold mb-2 small text-uppercase text-muted">Attachments</h6>
-               <button 
+              <h6 className="fw-bold mb-2 small text-uppercase text-muted">Attachments</h6>
+              <button
                 onClick={handleDownload}
                 className="btn btn-white btn-sm border d-inline-flex align-items-center gap-2 shadow-sm"
                 disabled={downloading}
-               >
-                 <i className={`ti ${downloading ? 'spinner-border spinner-border-sm' : 'ti-file-text text-danger'} fs-5`} />
-                 <span className="fw-medium">{note.attachment_name || 'Download PDF'}</span>
-                 <i className="ti ti-download text-muted ms-1" />
-               </button>
+              >
+                <i className={`ti ${downloading ? 'spinner-border spinner-border-sm' : 'ti-file-text text-danger'} fs-5`} />
+                <span className="fw-medium">{note.attachment_name || 'Download PDF'}</span>
+                <i className="ti ti-download text-muted ms-1" />
+              </button>
             </div>
           )}
 

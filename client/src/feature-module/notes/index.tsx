@@ -20,7 +20,7 @@ const Notes: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [statuses, setStatuses] = useState<Selection[]>([]);
   const [priorities, setPriorities] = useState<Selection[]>([]);
   const [noteCounts, setNoteCounts] = useState({ all: 0, important: 0 });
@@ -206,20 +206,13 @@ const Notes: React.FC = () => {
 
   return (
     <div className="page-wrapper">
-      {/* full page loader for initial data */}
-      {pageLoading && (
-        <div id="global-loader">
-          <div className="page-loader"></div>
-        </div>
-      )}
-
       <div className="content pb-4">
-        <NotesHeader onToggleSidebar={() => setSidebarOpen((s) => !s)} />
+        <NotesHeader onToggleSidebar={() => setSidebarOpen((s) => !s)} isSidebarOpen={isSidebarOpen} />
 
         <div className="row">
           <div
-            className={`col-xl-3 col-md-12 sidebars-right ${
-              isSidebarOpen ? "section-notes-dashboard" : ""
+            className={`col-xl-3 col-md-4 col-12 ${
+              isSidebarOpen ? "d-block" : "d-none"
             }`}
           >
             <NotesSidebar
@@ -233,17 +226,22 @@ const Notes: React.FC = () => {
           </div>
 
           <div
-            className={`col-xl-9 budget-role-notes ${
-              isSidebarOpen ? "budgeted-role-notes" : ""
-            }`}
+            className={isSidebarOpen ? "col-xl-9 col-md-8 col-12" : "col-12"}
           >
-            <NotesContent
-              notes={filteredNotes}
-              onEdit={handleEditClick}
-              onDelete={requestDelete}
-              mapStatus={statusMap}
-              mapPriority={priorityMap}
-            />
+            {pageLoading ? (
+              <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                <div className="page-loader mb-3"></div>
+                <span className="text-secondary fw-semibold">Loading notes...</span>
+              </div>
+            ) : (
+              <NotesContent
+                notes={filteredNotes}
+                onEdit={handleEditClick}
+                onDelete={requestDelete}
+                mapStatus={statusMap}
+                mapPriority={priorityMap}
+              />
+            )}
           </div>
         </div>
       </div>

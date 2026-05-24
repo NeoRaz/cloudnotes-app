@@ -10,4 +10,6 @@ export interface Note {
   attachment_path?: string;
   attachment_name?: string;
   delete_attachment?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }

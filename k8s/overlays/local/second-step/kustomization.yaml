@@ -7,7 +7,7 @@ images:
   newTag: local-1779634542
 - name: cloudnotes-client
   newName: cloudnotes-client
-  newTag: local-1779633669
+  newTag: local-1779643469
 - name: cloudnotes-server
   newName: cloudnotes-server
   newTag: local-1779634542
