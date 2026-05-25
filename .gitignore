@@ -59,10 +59,3 @@ db_data/
 .DS_Store
 .idea
 .vscode
-
-# K8S
-/k8s/secrets.*
-
-# Deployment
-/deployment/envs/local.env
-/deployment/envs/prod.env
