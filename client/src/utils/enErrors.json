@@ -1,0 +1,17 @@
+{
+  "general_error": "Something went wrong. Please try again later.",
+  "invalid_grant": "The user credentials were incorrect.",
+  "account_inactive": "Your account has not been activated yet.",
+  "account_not_verified": "Your account has not been verified yet.",
+  "upload_document_failure": "Failed to upload document. Please try again later.",
+  "invalid_registration_code": "Invalid registration code. Please try again later.",
+  "invalid_token": "Token has been already used, please make another request.",
+  "failed_to_send_reset_password_email": "Failed to send reset password email. Please try again later.",
+  "user_not_found": "User not found.",
+  "password_empty": "Password cannot be empty.",
+  "password_missing_uppercase_letter": "Password must contain at least one uppercase letter.",
+  "password_missing_digit": "Password must contain at least one digit.",
+  "password_missing_special_character": "Password must contain at least one special character.",
+  "password_too_short": "Password must be at least 8 characters long.",
+  "passwords_do_not_match": "Passwords do not match"
+}

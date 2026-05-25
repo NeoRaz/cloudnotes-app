@@ -36,7 +36,7 @@ kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "
 
 if [ "$ENVIRONMENT" == "local" ]; then
   echo "🐳 Setting Docker to Minikube daemon..."
-  eval $(minikube docker-env)
+  eval $(minikube docker-env --shell bash)
 
   # Generate a unique image tag
   IMAGE_TAG="local-$(date +%s)"
