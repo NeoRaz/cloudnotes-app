@@ -7,4 +7,5 @@ Route::prefix('note')->group(function () {
     Route::post('/create', [NoteController::class, 'store'])->name('note.create');
     Route::post('/update/{id}', [NoteController::class, 'update'])->name('note.update');
     Route::post('/delete/{id}', [NoteController::class, 'destroy'])->name('note.delete');
+    Route::get('/download/{id}', [NoteController::class, 'download'])->name('note.download');
 });

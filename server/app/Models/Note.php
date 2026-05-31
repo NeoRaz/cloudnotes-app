@@ -4,10 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Observers\NoteObserver;
 
 class Note extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::observe(NoteObserver::class);
+    }
 
     protected $fillable = [
         'title',
@@ -17,6 +23,8 @@ class Note extends Model
         'status_id',
         'due_date',
         'is_pinned',
+        'attachment_path',
+        'attachment_name',
     ];
 
     protected $casts = [

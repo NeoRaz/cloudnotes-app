@@ -24,6 +24,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      pgvector:
+        image: ankane/pgvector:latest
+        env:
+          POSTGRES_DB: cloudnotes_vector
+          POSTGRES_USER: laravel
+          POSTGRES_PASSWORD: 123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U laravel -d cloudnotes_vector"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +45,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.4
-          extensions: mbstring, bcmath, pdo_mysql
+          extensions: mbstring, bcmath, pdo_mysql, pdo_pgsql
           coverage: none
 
       - name: Install Composer dependencies
@@ -47,6 +60,11 @@ jobs:
           php -r "file_put_contents('.env', preg_replace('/DB_DATABASE=.*/', 'DB_DATABASE=cloud_notes_test', file_get_contents('.env')));"
           php -r "file_put_contents('.env', preg_replace('/DB_USERNAME=.*/', 'DB_USERNAME=laravel', file_get_contents('.env')));"
           php -r "file_put_contents('.env', preg_replace('/DB_PASSWORD=.*/', 'DB_PASSWORD=123', file_get_contents('.env')));"
+          php -r "file_put_contents('.env', preg_replace('/PG_HOST=.*/', 'PG_HOST=127.0.0.1', file_get_contents('.env')));"
+          php -r "file_put_contents('.env', preg_replace('/PG_PORT=.*/', 'PG_PORT=5432', file_get_contents('.env')));"
+          php -r "file_put_contents('.env', preg_replace('/PG_DATABASE=.*/', 'PG_DATABASE=cloudnotes_vector', file_get_contents('.env')));"
+          php -r "file_put_contents('.env', preg_replace('/PG_USERNAME=.*/', 'PG_USERNAME=laravel', file_get_contents('.env')));"
+          php -r "file_put_contents('.env', preg_replace('/PG_PASSWORD=.*/', 'PG_PASSWORD=123', file_get_contents('.env')));"
 
       - name: Wait for MySQL
         run: |
@@ -56,6 +74,17 @@ jobs:
               break
             fi
             echo "⏳ Waiting for MySQL..."
+            sleep 5
+          done
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..10}; do
+            if pg_isready -h 127.0.0.1 -p 5432 -U laravel -d cloudnotes_vector; then
+              echo "✅ Postgres is ready"
+              break
+            fi
+            echo "⏳ Waiting for Postgres..."
             sleep 5
           done
 

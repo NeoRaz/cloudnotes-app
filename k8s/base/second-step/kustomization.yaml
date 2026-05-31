@@ -1,5 +1,0 @@
-resources:
-  - 06-client-deployment.yaml
-  - 07-client-nginx-configmap.yaml
-  - 08-queue-worker.yaml
-  - 09-ingress.yaml

@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+requests
+psycopg2-binary
+numpy
+openai
+pydantic
+python-dotenv
+python-multipart
+pypdf

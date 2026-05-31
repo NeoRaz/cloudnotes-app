@@ -1,6 +1,0 @@
-resources:
-  - 01-mysql-statefulset.yaml
-  - 02-redis-deployment.yaml
-  - 03-server-deployment.yaml
-  - 04-server-nginx-deployment.yaml
-  - 05-server-nginx-configmap.yaml
