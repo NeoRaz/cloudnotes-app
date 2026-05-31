@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { getRequest, postRequest, deleteRequest } from '../api/api';
-import { Conversation, Message, Source } from '../types';
+import { Conversation, Message } from '../types';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 
@@ -17,7 +17,7 @@ function simpleMarkdown(text: string): string {
     .replace(/`([^`]+)`/g, '<code class="bg-slate-900 px-1.5 py-0.5 rounded text-accent font-mono text-sm">$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(?<!\n)\*(?![ \n])([^*\n]+)\*/g, '<em>$1</em>')
-    .replace(/^[ \t]*[\*\-] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    .replace(/^[ \t]*[*-] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
     .replace(/((<li>.*<\/li>\n?)+)/g, '<ul class="my-2 space-y-1">$1</ul>')
     .replace(/\n\n+/g, '</p><p class="mt-2">')
     .replace(/\n/g, '<br />')
@@ -27,7 +27,12 @@ function simpleMarkdown(text: string): string {
 export const Assistant: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: "Hi! I'm your CloudNotes AI assistant 🤖 Ask me anything about your notes and I'll search through them to answer.",
+    },
+  ]);
   
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,14 +44,15 @@ export const Assistant: React.FC = () => {
     try {
       const list = await getRequest('/assistant/conversations');
       setConversations(list || []);
-    } catch (err) {
-      console.error('Failed to load conversations', err);
+    } catch (error) {
+      console.error('Failed to load conversations', error);
     } finally {
       setSidebarLoading(false);
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadConversations();
   }, []);
 
@@ -56,13 +62,6 @@ export const Assistant: React.FC = () => {
       getRequest(`/assistant/conversations/${activeId}`).then((data) => {
         setMessages(data.messages || []);
       });
-    } else {
-      setMessages([
-        {
-          role: 'assistant',
-          content: "Hi! I'm your CloudNotes AI assistant 🤖 Ask me anything about your notes and I'll search through them to answer.",
-        },
-      ]);
     }
   }, [activeId]);
 
@@ -123,6 +122,12 @@ export const Assistant: React.FC = () => {
   const handleNewChat = () => {
     setActiveId(null);
     setInput('');
+    setMessages([
+      {
+        role: 'assistant',
+        content: "Hi! I'm your CloudNotes AI assistant 🤖 Ask me anything about your notes and I'll search through them to answer.",
+      },
+    ]);
   };
 
   const handleDeleteChat = async (e: React.MouseEvent, id: number) => {
@@ -146,7 +151,7 @@ export const Assistant: React.FC = () => {
         if (activeId === id) handleNewChat();
         loadConversations();
         toast.success('Conversation deleted');
-      } catch (err) {
+      } catch {
         toast.error('Failed to delete conversation');
       }
     }
@@ -332,3 +337,4 @@ const SourceChip: React.FC<{ name: string; text: string }> = ({ name, text }) =>
     </div>
   );
 };
+

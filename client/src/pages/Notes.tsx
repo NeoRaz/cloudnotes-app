@@ -58,7 +58,7 @@ export const Notes: React.FC = () => {
       setNotes(notesData || []);
       setStatuses(statusesData || []);
       setPriorities(prioritiesData || []);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load notes data');
     } finally {
       setLoading(false);
@@ -66,6 +66,7 @@ export const Notes: React.FC = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, []);
 
@@ -199,7 +200,7 @@ export const Notes: React.FC = () => {
         toast.success('Note updated successfully');
       }
       setModalType(null);
-    } catch (err) {
+    } catch {
       toast.error('Failed to save note');
     } finally {
       setActionLoading(false);
@@ -224,7 +225,7 @@ export const Notes: React.FC = () => {
         await postRequest(`/note/delete/${noteId}`);
         setNotes((prev) => prev.filter((n) => n.id !== noteId));
         toast.success('Note deleted successfully');
-      } catch (err) {
+      } catch {
         toast.error('Failed to delete note');
       }
     }
@@ -730,3 +731,4 @@ export const Notes: React.FC = () => {
     </div>
   );
 };
+

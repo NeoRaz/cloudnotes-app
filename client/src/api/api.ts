@@ -25,6 +25,14 @@ const notifyError = (message: string) => {
   toast.error(message, { duration: 5000, id: message });
 };
 
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message;
+    if (typeof message === 'string' && message.trim()) return message;
+  }
+  return fallback;
+};
+
 export const logoutUser = () => {
   sessionStorage.clear();
   localStorage.removeItem('expiration_time');
@@ -32,17 +40,22 @@ export const logoutUser = () => {
 };
 
 // Handle standard API errors
-const handleApiError = (error: any) => {
-  if (error.response?.status === 401) {
+const handleApiError = (error: unknown) => {
+  if (axios.isAxiosError(error) && error.response?.status === 401) {
     logoutUser();
-    return;
+    throw error;
   }
-  const errorCode = error.response?.data?.error;
-  if (errorCode && errorCode in enErrors) {
-    notifyError((enErrors as Record<string, string>)[errorCode]);
-  } else {
-    notifyError(error.response?.data?.message || enErrors.general_error);
+
+  if (axios.isAxiosError(error)) {
+    const errorCode = error.response?.data?.error;
+    if (typeof errorCode === 'string' && errorCode in enErrors) {
+      notifyError((enErrors as Record<string, string>)[errorCode]);
+    } else {
+      notifyError(getErrorMessage(error, enErrors.general_error));
+    }
+    throw error;
   }
+  notifyError(enErrors.general_error);
   throw error;
 };
 
@@ -69,12 +82,16 @@ export async function postLoginRequest(url: string, data = {}) {
   try {
     const response = await api.post(url, data);
     return response.data;
-  } catch (error: any) {
-    const errorCode = error.response?.data?.error;
-    if (errorCode && errorCode in enErrors) {
-      notifyError((enErrors as Record<string, string>)[errorCode]);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const errorCode = error.response?.data?.error;
+      if (typeof errorCode === 'string' && errorCode in enErrors) {
+        notifyError((enErrors as Record<string, string>)[errorCode]);
+      } else {
+        notifyError(getErrorMessage(error, enErrors.general_error));
+      }
     } else {
-      notifyError(error.response?.data?.message || enErrors.general_error);
+      notifyError(enErrors.general_error);
     }
     throw error;
   }
@@ -104,7 +121,7 @@ export async function getRefreshTokenRequest() {
     // reset expiration
     const newExpirationTime = new Date(new Date().getTime() + 50 * 60 * 1000);
     localStorage.setItem('expiration_time', newExpirationTime.toString());
-  } catch (error) {
+  } catch {
     logoutUser();
   }
 }
@@ -119,8 +136,8 @@ export async function getFileRequest(url: string, params = {}, filename: string)
       type: (response.headers['content-type'] as string) || 'application/octet-stream',
     });
     saveAs(blob, filename);
-  } catch (error: any) {
-    notifyError(error.response?.data?.message || 'Download failed');
+  } catch (error) {
+    notifyError(getErrorMessage(error, 'Download failed'));
   }
 }
 
@@ -135,8 +152,8 @@ export async function postFileRequest(url: string, file: File, params = {}) {
       },
     });
     return response.data;
-  } catch (error: any) {
-    notifyError(error.response?.data?.message || 'Upload failed');
+  } catch (error) {
+    notifyError(getErrorMessage(error, 'Upload failed'));
     throw error;
   }
 }

@@ -87,7 +87,7 @@ export const Register: React.FC = () => {
 
       toast.success('Registration code sent to your email!');
       setStep('verify');
-    } catch (err) {
+    } catch {
       // Handled by API error toaster
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ export const Register: React.FC = () => {
 
       toast.success('Email verified successfully!');
       setStep('success');
-    } catch (err) {
+    } catch {
       // Handled by API error toaster
     } finally {
       setLoading(false);
@@ -350,3 +350,4 @@ export const Register: React.FC = () => {
     </div>
   );
 };
+

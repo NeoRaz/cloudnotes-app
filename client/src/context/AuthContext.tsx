@@ -4,6 +4,8 @@ import { getRefreshTokenRequest, getRequest, logoutUser } from '../api/api';
 import { aesEncrypt } from '../utils/crypto';
 import { User } from '../types';
 
+const EXPIRATION_DURATION = 50 * 60 * 1000;
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -44,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Backend returns { user: { first_name, last_name, email } }
       const userData = response?.user || response;
       setUser(userData);
-    } catch (err) {
+    } catch {
       setUser(null);
     }
   };
@@ -60,7 +62,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [isAuthenticated]);
 
   // Expiration Check & Background Token Refresh (every 50 minutes)
-  const EXPIRATION_DURATION = 50 * 60 * 1000;
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -130,6 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

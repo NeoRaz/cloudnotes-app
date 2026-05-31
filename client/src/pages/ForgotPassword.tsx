@@ -21,7 +21,7 @@ export const ForgotPassword: React.FC = () => {
       await postRequest('/send-reset-password-email', { email });
       setSubmitted(true);
       toast.success('Reset instructions sent to your email');
-    } catch (err) {
+    } catch {
       // Handled by API error interceptor toast
     } finally {
       setLoading(false);
@@ -119,3 +119,4 @@ export const ForgotPassword: React.FC = () => {
     </div>
   );
 };
+

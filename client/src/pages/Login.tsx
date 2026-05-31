@@ -55,7 +55,7 @@ export const Login: React.FC = () => {
       await login(access_token, refresh_token, token_type);
       toast.success('Welcome back!');
       navigate('/');
-    } catch (err: any) {
+    } catch {
       // Errors handled by postLoginRequest toast interceptor
     } finally {
       setLoading(false);
@@ -184,3 +184,4 @@ export const Login: React.FC = () => {
     </div>
   );
 };
+

@@ -9,7 +9,8 @@ export const aesEncrypt = (str: string): string => {
 export const aesDecrypt = (encryptedStr: string): string => {
   try {
     return CryptoJS.AES.decrypt(encryptedStr, secretKey).toString(CryptoJS.enc.Utf8);
-  } catch (err) {
+  } catch {
     return '';
   }
 };
+

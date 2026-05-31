@@ -42,7 +42,7 @@ export const ResetPassword: React.FC = () => {
           toast.error('The password reset link is invalid or has expired.');
           navigate('/login');
         }
-      } catch (err) {
+      } catch {
         toast.error('The password reset link is invalid or has expired.');
         navigate('/login');
       } finally {
@@ -90,7 +90,7 @@ export const ResetPassword: React.FC = () => {
 
       toast.success('Password updated successfully!');
       navigate('/login');
-    } catch (err) {
+    } catch {
       // Handled by API error interceptor
     } finally {
       setLoading(false);
@@ -266,3 +266,4 @@ export const ResetPassword: React.FC = () => {
     </div>
   );
 };
+

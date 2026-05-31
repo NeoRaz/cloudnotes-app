@@ -49,7 +49,7 @@ export const Profile: React.FC = () => {
         setFirstName(userObj.first_name || '');
         setLastName(userObj.last_name || '');
         setEmail(userObj.email || '');
-      } catch (err) {
+      } catch {
         toast.error('Failed to load profile details');
       } finally {
         setLoading(false);
@@ -90,7 +90,7 @@ export const Profile: React.FC = () => {
       });
       await refreshUser();
       toast.success('Details updated successfully!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to update details');
     } finally {
       setSavingDetails(false);
@@ -133,7 +133,7 @@ export const Profile: React.FC = () => {
       setPasswordTouched({});
       setPasswordErrors({});
       toast.success('Password updated successfully!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to update password');
     } finally {
       setSavingPassword(false);
@@ -389,3 +389,4 @@ export const Profile: React.FC = () => {
     </div>
   );
 };
+
