@@ -2,7 +2,7 @@
 
 This repository contains the application source code for **CloudNotes**—a secure cloud-native note-taking application equipped with security protocols, user profile management, custom theme controls (Stratosphere/Nocturne), and RAG-based AI assistant capabilities.
 
-For provisioning infrastructure, Kubernetes configurations, and local development deployment scripts, see the DevSecOps repository: **[cloudnotes-infra](../cloudnotes-infra)**.
+For provisioning infrastructure, Kubernetes configurations, and local development deployment scripts, see the DevSecOps repository: **[cloudnotes-infra](https://github.com/NeoRaz/cloudnotes-infra)**.
 
 ---
 
@@ -51,10 +51,10 @@ Python-based microservice managing vector embeddings and document indexing.
 
 ## Deployment & Setup
 
-This repository is linked as a Git Submodule inside **[cloudnotes-infra](../cloudnotes-infra)**.
+This repository is linked as a Git Submodule inside **[cloudnotes-infra](https://github.com/NeoRaz/cloudnotes-infra)**.
 To build and deploy the complete stack locally using Minikube:
 1. Clone the infrastructure repository.
 2. Initialize submodules.
 3. Run the setup scripts in `cloudnotes-infra/deployment/scripts`.
 
-See the **[cloudnotes-infra README](../cloudnotes-infra/README.md)** for details.
+See the **[cloudnotes-infra README](https://github.com/NeoRaz/cloudnotes-infra/blob/main/README.md)** for details.
