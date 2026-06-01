@@ -1,6 +1,7 @@
 import CryptoJS from 'crypto-js';
+import { runtimeConfig } from '../config/runtime';
 
-const secretKey = import.meta.env.REACT_APP_SECRET_KEY || 'default-secret-key';
+const secretKey = runtimeConfig.secretKey;
 
 export const aesEncrypt = (str: string): string => {
   return CryptoJS.AES.encrypt(str, secretKey).toString();
