@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { runtimeConfig } from '../config/runtime';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -48,7 +49,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const menuItems = [
     { name: 'Notes', path: '/', icon: 'ti-file-text' },
-    { name: 'Ask AI', path: '/assistant', icon: 'ti-brain' },
+    ...(runtimeConfig.enableAI ? [{ name: 'Ask AI', path: '/assistant', icon: 'ti-brain' }] : []),
     { name: 'Profile', path: '/profile', icon: 'ti-user' }
   ];
 

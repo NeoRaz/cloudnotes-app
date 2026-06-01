@@ -11,6 +11,7 @@ import { ResetPassword } from './pages/ResetPassword';
 import { Notes } from './pages/Notes';
 import { Assistant } from './pages/Assistant';
 import { Profile } from './pages/Profile';
+import { runtimeConfig } from './config/runtime';
 
 export const App: React.FC = () => {
   return (
@@ -86,16 +87,18 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/assistant"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Assistant />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+          {runtimeConfig.enableAI && (
+            <Route
+              path="/assistant"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Assistant />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+          )}
           <Route
             path="/profile"
             element={
