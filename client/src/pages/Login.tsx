@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { postLoginRequest } from '../api/api';
 import { validateEmail } from '../utils/validation';
 import toast from 'react-hot-toast';
+import { runtimeConfig } from '../config/runtime';
 
 interface FormErrors {
   email?: string;
@@ -45,8 +46,8 @@ export const Login: React.FC = () => {
     try {
       const response = await postLoginRequest('/login', {
         grant_type: 'password',
-        client_id: import.meta.env.REACT_APP_CLIENT_ID,
-        client_secret: import.meta.env.REACT_APP_CLIENT_SECRET,
+        client_id: runtimeConfig.clientId,
+        client_secret: runtimeConfig.clientSecret,
         username: email,
         password: password,
       });

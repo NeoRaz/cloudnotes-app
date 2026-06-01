@@ -3,9 +3,10 @@ import { saveAs } from 'file-saver';
 import toast from 'react-hot-toast';
 import { aesDecrypt, aesEncrypt } from '../utils/crypto';
 import enErrors from '../utils/enErrors.json';
+import { runtimeConfig } from '../config/runtime';
 
 const api = axios.create({
-  baseURL: import.meta.env.REACT_APP_API_BASE_URL,
+  baseURL: runtimeConfig.apiBaseUrl,
   headers: {
     'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'no-store,no-cache,must-revalidate',
@@ -109,8 +110,8 @@ export async function getRefreshTokenRequest() {
   try {
     const response = await api.post('refresh-token', {
       grant_type: 'refresh_token',
-      client_id: import.meta.env.REACT_APP_CLIENT_ID,
-      client_secret: import.meta.env.REACT_APP_CLIENT_SECRET,
+      client_id: runtimeConfig.clientId,
+      client_secret: runtimeConfig.clientSecret,
       refresh_token: decryptedRefreshToken,
     });
 
